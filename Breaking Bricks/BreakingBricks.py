@@ -17,7 +17,7 @@ bat_rect[1] = screen.get_height() - 50 # to place the bat 50 pixels from bottom 
 ball = pygame.image.load('./images/football.png')
 ball = ball.convert_alpha()
 ball_rect = ball.get_rect() # note rect has x, y, width, height
-ball_start = (200, 200) # initial position of the ball
+ball_start = (200, 250) # initial position of the ball
 ball_speed = (3.0, 3.0)
 ball_served = False # initally we want the ball be static unless we ask it to move
 sx, sy = ball_speed # speed in the x and y direction
@@ -60,14 +60,48 @@ while not game_over:
     if pressed[K_SPACE]:
         ball_served = True
 
+    # making sure once ball hit the bat it bounces back
+    if bat_rect[0] + bat_rect.width >= ball_rect[0] >= bat_rect[0] and \
+            ball_rect[1] + ball_rect.height >= bat_rect[1] and sy > 0:
+        sy = sy * (-1)
+        # increase the ball speed each time the ball hit the bat so b=game gets tougher
+        sx *= 1.02
+        sy *= 1.02
+        continue
+
+    # when the ball hit the brick
+    delete_brick = None
+    for b in bricks:
+        bx, by = b
+
+        if bx + brick_rect.width >= ball_rect[0] >= bx and \
+            by + brick_rect.height >= ball_rect[1] >= by:
+            delete_brick = b
+    # to remove the brick
+    if delete_brick is not None:
+        bricks.remove(delete_brick)
+
+        # to bounce once the ball hit the brick and brick is removed
+        if ball_rect[0] <= bx + 2:
+            sx *= -1
+        elif ball_rect[0] <= bx + brick_rect.width - 2:
+            sx *= -1
+        if ball_rect[1] <= by + 2:
+            sy *= -1
+        elif ball_rect[0] <= by + brick_rect.height - 2:
+            sy *= -1
+
+
+
     #Setting framses so ball wont go out of screen
 
     if ball_rect[0] > (screen.get_width()-ball.get_width()): #right
         ball_rect[0] = screen.get_width()-ball.get_width()
         sx = sx * (-1) # bounce the ball back in opposite direction
     if ball_rect[1] > (screen.get_height()-ball.get_height()): #bottom
-        ball_rect[1] = screen.get_height()-ball.get_height()
-        sy = sy * (-1) # bounce the ball back in opposite direction
+        ball_rect.topleft = ball_start # if ball goes out of bounds in the bottom set it to inttial start position
+        ball_served = False # set ball served to false so, we can press space to restart each time
+
     if ball_rect[0] < 0: #left
         ball_rect[0] = 0
         sx = sx * (-1) # bounce the ball back in opposite direction
